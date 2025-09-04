@@ -4,6 +4,7 @@ import React, { useMemo, useState } from "react";
 const TRUMP_IMG =
   "/trump-head.png";
 
+
 const BIDEN_IMG =
   "/joe-head.png";
 
