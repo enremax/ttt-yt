@@ -2,18 +2,10 @@ import React, { useMemo, useState } from "react";
 
 // ---- Image placeholders ----------------------------------------------------
 const TRUMP_IMG =
-  "data:image/svg+xml;utf8,\
-  <svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'>\
-    <circle cx='80' cy='80' r='60' fill='%23b91c1c' stroke='%23fff' stroke-width='4'/>\
-    <text x='80' y='95' font-size='44' text-anchor='middle' fill='white' font-family='Arial Black'>DT</text>\
-  </svg>";
+  "/trump-head.png";
 
 const BIDEN_IMG =
-  "data:image/svg+xml;utf8,\
-  <svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'>\
-    <circle cx='80' cy='80' r='60' fill='%233b82f6' stroke='%23fff' stroke-width='4'/>\
-    <text x='80' y='95' font-size='44' text-anchor='middle' fill='white' font-family='Arial Black'>JB</text>\
-  </svg>";
+  "/joe-head.png";
 
 // ---- Helpers ---------------------------------------------------------------
 const LINES = [
@@ -36,8 +28,37 @@ function availableMoves(board) {
 function mediumBotMove(board) {
   const moves = availableMoves(board);
   if (moves.length === 0) return null;
-  for (const m of moves) { const c = board.slice(); c[m] = 'O'; if (winnerOf(c) === 'O') return m; }
-  for (const m of moves) { const c = board.slice(); c[m] = 'X'; if (winnerOf(c) === 'X') return m; }
+  
+  // Always take winning moves (must do this or it's obviously throwing)
+  for (const m of moves) { 
+    const c = board.slice(); 
+    c[m] = 'O'; 
+    if (winnerOf(c) === 'O') return m; 
+  }
+  
+  // Only block winning moves 5% of the time (very rarely)
+  if (Math.random() < 0.05) {
+    for (const m of moves) { 
+      const c = board.slice(); 
+      c[m] = 'X'; 
+      if (winnerOf(c) === 'X') return m; 
+    }
+  }
+  
+  // Prefer suboptimal moves that seem reasonable:
+  
+  // 1. Avoid the center (center is strongest position)
+  const nonCenterMoves = moves.filter(m => m !== 4);
+  if (nonCenterMoves.length > 0 && Math.random() < 0.8) {
+    // 2. Prefer edges over corners (edges are weaker than corners)
+    const edges = [1, 3, 5, 7].filter(i => nonCenterMoves.includes(i));
+    if (edges.length > 0 && Math.random() < 0.7) {
+      return edges[Math.floor(Math.random() * edges.length)];
+    }
+    return nonCenterMoves[Math.floor(Math.random() * nonCenterMoves.length)];
+  }
+  
+  // Fallback to any available move
   return moves[Math.floor(Math.random() * moves.length)];
 }
 
@@ -51,6 +72,21 @@ function Prelander({ onStart }) {
         <div className="flex justify-center">
           <img src="/tb.jpg" alt="Trump vs Biden" className="rounded-2xl shadow-xl max-h-56 w-auto" />
         </div>
+
+        <div className="flex justify-center">
+          <button onClick={onStart} className="px-10 py-5 rounded-2xl bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-extrabold text-xl tracking-wide shadow-[0_8px_20px_rgba(220,38,38,0.45)]">
+            Click To Play
+          </button>
+        </div>
+
+                <div className="p-5 rounded-2xl bg-slate-700 shadow-xl">
+          <h2 className="text-xl font-bold mb-3 text-center">Today’s Prize: Trump Mystery Box</h2>
+          <div className="flex justify-center">
+            <img src="/prize.webp" alt="Trump Mystery Box" className="rounded-xl max-h-56 w-auto" />
+          </div>
+        </div>
+
+
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="p-5 rounded-2xl bg-slate-700 shadow-xl">
@@ -72,18 +108,7 @@ function Prelander({ onStart }) {
           </div>
         </div>
 
-        <div className="p-5 rounded-2xl bg-slate-700 shadow-xl">
-          <h2 className="text-xl font-bold mb-3">Today’s Prize</h2>
-          <div className="flex justify-center">
-            <img src="/prize.webp" alt="Trump Mystery Box" className="rounded-xl max-h-56 w-auto" />
-          </div>
-        </div>
 
-        <div className="flex justify-center">
-          <button onClick={onStart} className="px-10 py-5 rounded-2xl bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-extrabold text-xl tracking-wide shadow-[0_8px_20px_rgba(220,38,38,0.45)]">
-            Click Here To Start The Game
-          </button>
-        </div>
       </div>
     </div>
   );
@@ -94,6 +119,7 @@ function ThankYou() {
     <div className="min-h-screen bg-slate-900 text-white flex items-center justify-center p-6">
       <div className="w-full max-w-2xl p-8 rounded-3xl bg-slate-800/80 shadow-2xl text-center space-y-4">
         <h1 className="text-3xl font-extrabold">🎉 Congratulations — you beat Biden!</h1>
+        <img src="prize.webp" width={250} className="mx-auto" />
         <p className="opacity-90">
           As promised, this <strong>Trump Mystery Box</strong> (worth up to <strong>$300</strong>) is <strong>no cost</strong> to you.
           All we ask is you cover the small shipping &amp; handling fee.
